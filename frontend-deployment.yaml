@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lugx-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lugx-frontend
+  template:
+    metadata:
+      labels:
+        app: lugx-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: mahishi707/frontend:latest
+        ports:
+        - containerPort: 80

@@ -28,7 +28,7 @@ jobs:
         aws-region: us-east-1
 
     - name: Update kubeconfig
-      run: aws eks update-kubeconfig --region us-east-1 --name lugx-eks
+      run: aws eks update-kubeconfig --region us-east-1 --name lugx-final
 
     - name: Deploy Order Service to EKS
       run: |

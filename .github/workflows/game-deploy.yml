@@ -1,0 +1,37 @@
+name: Deploy Game Service
+
+on:
+  push:
+    paths:
+      - 'game-service/**'
+      - '.github/workflows/game-deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: DockerHub Login
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build & Push Game Service
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/game-service:latest game-service
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/game-service:latest
+
+    - name: AWS Auth
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Update kubeconfig
+      run: aws eks update-kubeconfig --region us-east-1 --name lugx-eks
+
+    - name: Deploy Game Service to EKS
+      run: |
+        kubectl apply -f k8s/game-deployment.yaml
+        kubectl set image deployment/game-service game-service=${{ secrets.DOCKERHUB_USERNAME }}/game-service:latest -n default
+        kubectl rollout status deployment/game-service -n default

@@ -1,0 +1,37 @@
+name: Deploy Analytics Service
+
+on:
+  push:
+    paths:
+      - 'analytics-service/**'
+      - '.github/workflows/analytics-deploy.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: DockerHub Login
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build & Push Analytics
+      run: |
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/analytics-service:latest analytics-service
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/analytics-service:latest
+
+    - name: AWS Auth
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Update kubeconfig
+      run: aws eks update-kubeconfig --region us-east-1 --name lugx-eks
+
+    - name: Deploy Analytics to EKS
+      run: |
+        kubectl apply -f k8s/analytics-deployment.yaml
+        kubectl set image deployment/analytics-service analytics-service=${{ secrets.DOCKERHUB_USERNAME }}/analytics-service:latest -n default
+        kubectl rollout status deployment/analytics-service -n default

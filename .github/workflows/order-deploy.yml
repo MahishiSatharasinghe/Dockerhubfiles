@@ -32,6 +32,6 @@ jobs:
 
     - name: Deploy Order Service to EKS
       run: |
-        kubectl apply -f k8s/order-deployment.yaml
+        kubectl apply -f order-deployment.yaml
         kubectl set image deployment/order-service order-service=${{ secrets.DOCKERHUB_USERNAME }}/order-service:latest -n default
         kubectl rollout status deployment/order-service -n default

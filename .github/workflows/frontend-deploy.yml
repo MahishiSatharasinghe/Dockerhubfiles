@@ -28,10 +28,10 @@ jobs:
         aws-region: us-east-1
 
     - name: Update kubeconfig
-      run: aws eks update-kubeconfig --region us-east-1 --name lugx-eks
+      run: aws eks update-kubeconfig --region us-east-1 --name lugx-cluster
 
     - name: Deploy Frontend to EKS
       run: |
-        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f frontend-deployment.yaml
         kubectl set image deployment/lugx-frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/frontend:latest -n default
         kubectl rollout status deployment/lugx-frontend -n default
